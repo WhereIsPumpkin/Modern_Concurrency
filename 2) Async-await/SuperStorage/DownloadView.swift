@@ -42,9 +42,9 @@ struct DownloadView: View {
   @State var fileData: Data?
   /// Should display a download activity indicator.
   @State var isDownloadActive = false
-
+  
   @State var duration = ""
-
+  
   var body: some View {
     List {
       // Show the details of the selected file and download buttons.
@@ -53,8 +53,12 @@ struct DownloadView: View {
         isDownloading: !model.downloads.isEmpty,
         isDownloadActive: $isDownloadActive,
         downloadSingleAction: {
+          isDownloadActive = true
           Task {
-            fileData = try await model.download(file: file)
+            do {
+              fileData = try await model.download(file: file)
+            } catch {}
+            isDownloadActive = false
           }
         },
         downloadWithUpdatesAction: {
@@ -68,12 +72,12 @@ struct DownloadView: View {
         // Show progress for any ongoing downloads.
         Downloads(downloads: model.downloads)
       }
-
+      
       if !duration.isEmpty {
         Text("Duration: \(duration)")
           .font(.caption)
       }
-
+      
       if let fileData {
         // Show a preview of the file if it's a valid image.
         FilePreview(fileData: fileData)
@@ -84,7 +88,7 @@ struct DownloadView: View {
     .toolbar {
       Button(action: {
       }, label: { Text("Cancel All") })
-        .disabled(model.downloads.isEmpty)
+      .disabled(model.downloads.isEmpty)
     }
     .onDisappear {
       fileData = nil
